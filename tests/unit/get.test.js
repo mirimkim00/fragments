@@ -20,5 +20,25 @@ describe('GET /v1/fragments', () => {
     expect(Array.isArray(res.body.fragments)).toBe(true);
   });
 
-  // TODO: we'll need to add tests to check the contents of the fragments array later
+  test('get an empty fragments array', async () => {
+    const res = await request(app).get('/v1/fragments/').auth('user1@email.com', 'password1');
+    expect(res.statusCode).toBe(200);
+    expect(res.body.fragments).toEqual([]);
+  });
+
+  test('get fragment array by ID', async () => {
+    const res = await request(app)
+      .get('/v1/fragments/invalidID')
+      .auth('user1@email.com', 'password1');
+    expect(res.statusCode).toBe(404);
+    expect(res.body.error.message).toBe('not found');
+  });
+
+  test('get fragment array by invalid ID', async () => {
+    const res = await request(app)
+      .get('/v1/fragments/invalidID')
+      .auth('user1@email.com', 'password1');
+    expect(res.statusCode).toBe(404);
+    expect(res.body.error.message).toBe('not found');
+  });
 });
