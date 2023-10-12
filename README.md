@@ -11,6 +11,6 @@ Use one of these three methods to start your server, and use CTRL + c to stop ea
 `npm run dev`  
 `npm run debug`
 
-Use these commands to test:
+Test commands:
 `npm run test`
 `npm run coverage`
