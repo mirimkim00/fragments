@@ -3,7 +3,6 @@
 const { randomUUID } = require('crypto');
 // Use https://www.npmjs.com/package/content-type to create/parse Content-Type headers
 const contentType = require('content-type');
-const logger = require('../logger');
 
 // Functions for working with fragment metadata/data using our DB
 const {
@@ -15,7 +14,7 @@ const {
   deleteFragment,
 } = require('./data');
 
-const validTypes = [
+const supportedTypes = [
   'text/plain',
   'text/plain; charset=utf-8',
   'text/markdown',
@@ -38,17 +37,17 @@ class Fragment {
     if (ownerId) {
       this.ownerId = ownerId;
     } else {
-      throw new Error(`Invalid ownerId`);
+      throw new Error(`ownerId is required, got ownerId=${ownerId}`);
     }
 
-    if (Fragment.isSupportedType(type)) {
+    if (type) {
       this.type = type;
     } else {
-      throw new Error(`Invalid fragment type`);
+      throw new Error(`Content-Type is required, got Content-Type=${ownerId}`);
     }
 
     if (size < 0 || typeof size === 'string') {
-      throw new Error('Invalid size');
+      throw new Error('size cannot be negative and cannot be a type of String');
     } else {
       this.size = size;
     }
@@ -95,7 +94,7 @@ class Fragment {
     try {
       return new Fragment(await readFragment(ownerId, id));
     } catch (err) {
-      throw new Error(`Cannot get the fragment by the given ID`);
+      throw new Error(`Cannot find the fragment with that ID`);
     }
   }
 
@@ -123,17 +122,7 @@ class Fragment {
    * @returns Promise<Buffer>
    */
   getData() {
-    try {
-      return new Promise((resolve, reject) => {
-        readFragmentData(this.ownerId, this.id)
-          .then((data) => resolve(Buffer.from(data)))
-          .catch(() => {
-            reject(new Error());
-          });
-      });
-    } catch (err) {
-      throw new Error(`Cannot get the data`);
-    }
+    return readFragmentData(this.ownerId, this.id);
   }
 
   /**
@@ -142,13 +131,16 @@ class Fragment {
    * @returns Promise<void>
    */
   async setData(data) {
-    if (!data) {
-      throw new Error(`Invalid data`);
-    } else {
-      this.updated = new Date().toISOString();
+    if (!Buffer.isBuffer(data)) {
+      throw new Error('Data is not a Buffer');
+    }
+
+    try {
+      await this.save();
       this.size = Buffer.byteLength(data);
-      await writeFragment(this);
-      return await writeFragmentData(this.ownerId, this.id, data);
+      return writeFragmentData(this.ownerId, this.id, data);
+    } catch (err) {
+      throw new Error(`Error Found: ${err}`);
     }
   }
 
@@ -191,12 +183,7 @@ class Fragment {
    * @returns {boolean} true if we support this Content-Type (i.e., type/subtype)
    */
   static isSupportedType(value) {
-    let result = false;
-
-    if (validTypes.includes(value)) {
-      result = true;
-    }
-    return result;
+    return supportedTypes.includes(value);
   }
 }
 
