@@ -10,22 +10,6 @@ FROM node:18.18.0 AS dependencies
 LABEL maintainer="Mirim Kim <mirimkim00@gmail.com>"
 LABEL description="Fragments node.js microservice"
 
-# Define any environment variables
-# key=value pairs like LABEL
-# We default to use port 8080 in our service
-ENV PORT=8080
-
-# all installation steps and code execution occur in a production way
-ENV NODE_ENV=production
-
-# Reduce npm spam when installing within Docker
-# https://docs.npmjs.com/cli/v8/using-npm/config#loglevel
-ENV NPM_CONFIG_LOGLEVEL=warn
-
-# Disable colour when run inside Docker
-# https://docs.npmjs.com/cli/v8/using-npm/config#color
-ENV NPM_CONFIG_COLOR=false
-
 # Use /app as our working directory
 WORKDIR /app
 
@@ -40,10 +24,31 @@ COPY ./src ./src
 
 # Copy our HTPASSWD file
 COPY ./tests/.htpasswd ./tests/.htpasswd
+
 #######################################################################
+
 # Stage 1: use dependencies to build and run
 
 FROM node:18.18.0 AS builder
+
+# Where to put the env?
+# Those are all fine to have in any layer of your image,
+# but for sure you want to have the PORT and NODE_ENV in final layer.
+# They can be overriden at run time, so there is no risk in having them.
+
+# We default to use port 8080 in our service
+ENV PORT=8080
+
+# all installation steps and code execution occur in a production way
+ENV NODE_ENV=production
+
+# Reduce npm spam when installing within Docker
+# https://docs.npmjs.com/cli/v8/using-npm/config#loglevel
+ENV NPM_CONFIG_LOGLEVEL=warn
+
+# Disable colour when run inside Docker
+# https://docs.npmjs.com/cli/v8/using-npm/config#color
+ENV NPM_CONFIG_COLOR=false
 
 WORKDIR /app
 
@@ -55,7 +60,7 @@ COPY . .
 
 # Run the server
 # Start the container by running our server
-CMD npm start
+CMD ["npm", "start"]
 
 # We run our service on port 8080
 EXPOSE 8080
