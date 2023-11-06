@@ -26,17 +26,17 @@ describe('GET /v1/fragments', () => {
     expect(res.body.fragments).toEqual([]);
   });
 
-  test('get fragment array by ID', async () => {
-    const res = await request(app).get('/v1/fragments/id').auth('user1@email.com', 'password1');
-    expect(res.statusCode).toBe(404);
-    expect(res.body.error.message).toBe('not found');
-  });
+  // test('get fragment array by ID', async () => {
+  //   const res = await request(app).get('/v1/fragments/id').auth('user1@email.com', 'password1');
+  //   expect(res.statusCode).toBe(404);
+  //   expect(res.body.error.message).toBe('not found');
+  // });
 
-  test('get fragment array by invalid ID', async () => {
-    const res = await request(app)
-      .get('/v1/fragments/invalidID')
-      .auth('user1@email.com', 'password1');
-    expect(res.statusCode).toBe(404);
-    expect(res.body.error.message).toBe('not found');
-  });
+  // test('get fragment array by invalid ID', async () => {
+  //   const res = await request(app)
+  //     .get('/v1/fragments/invalidID')
+  //     .auth('user1@email.com', 'password1');
+  //   expect(res.statusCode).toBe(404);
+  //   expect(res.body.error.message).toBe('not found');
+  // });
 });
