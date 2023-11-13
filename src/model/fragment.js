@@ -132,17 +132,9 @@ class Fragment {
    * @returns Promise<void>
    */
   async setData(data) {
-    if (!Buffer.isBuffer(data)) {
-      throw new Error('Data is not a Buffer');
-    }
-
-    try {
-      await this.save();
-      this.size = Buffer.byteLength(data);
-      return writeFragmentData(this.ownerId, this.id, data);
-    } catch (err) {
-      throw new Error(`Error Found: ${err}`);
-    }
+    this.size = Buffer.byteLength(data);
+    this.updated = new Date(Date.now()).toISOString();
+    return await writeFragmentData(this.ownerId, this.id, data);
   }
 
   /**
@@ -160,8 +152,7 @@ class Fragment {
    * @returns {boolean} true if fragment's type is text/*
    */
   get isText() {
-    let result = this.mimeType.startsWith('text/');
-    return result;
+    return this.mimeType.startsWith('text');
   }
 
   /**

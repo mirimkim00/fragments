@@ -1,43 +1,47 @@
 const { createErrorResponse } = require('../../response');
-const logger = require('../../logger');
-const Fragment = require('../../model/fragment');
+const { Fragment } = require('../../model/fragment');
 const path = require('path');
+const MarkdownIt = require('markdown-it'),
+  md = new MarkdownIt();
 
 module.exports = async (req, res) => {
+  const extension = path.extname(req.params.id);
+  const fragmentId = path.basename(req.params.id, extension);
+
   try {
-    const ownerId = req.user;
-    const id = path.parse(req.params.id).name;
-    const ext = path.parse(req.params.id).ext.slice(1);
+    let fragmentMetadata = await Fragment.byId(req.user, fragmentId);
+    let fragment = await fragmentMetadata.getData();
 
-    const fragment = new Fragment(await Fragment.byId(ownerId, id));
-    const fragmentData = await fragment.getData();
-
-    if (!ext) {
-      logger.debug({ fragment }, 'GET /fragments/:id');
-      res.setHeader('content-type', fragment.type);
-      res.status(200).send(fragmentData);
-    } else {
-      logger.debug({ id: id, ext: ext }, 'GET /fragments/:id.ext');
-
-      if (!Fragment.isSupportedExt(ext)) {
-        return res.status(415).json(createErrorResponse(415, 'Extension type is not supported.'));
+    if (!extension) {
+      res.set('Content-type', fragmentMetadata.mimeType).status(200).send(fragment);
+    } else if (extension) {
+      if (
+        (fragmentMetadata.mimeType.startsWith('text/') && extension === '.txt') ||
+        (fragmentMetadata.mimeType === 'application/json' && extension === '.txt')
+      ) {
+        fragmentMetadata.type = 'text/plain';
+        res.set('Content-type', fragmentMetadata.mimeType).status(200).send(fragment);
+      } else if (
+        (fragmentMetadata.mimeType === 'text/markdown' && extension === '.md') ||
+        (fragmentMetadata.mimeType === 'text/html' && extension === '.html') ||
+        (fragmentMetadata.mimeType === 'application/json' && extension === '.json')
+      ) {
+        res.set('Content-type', fragmentMetadata.mimeType).status(200).send(fragment);
+      } else if (fragmentMetadata.mimeType === 'text/markdown' && extension === '.html') {
+        fragmentMetadata.type = 'text/html';
+        res
+          .set('Content-type', fragmentMetadata.mimeType)
+          .status(200)
+          .send(md.render(`# ${fragment}`));
+      } else {
+        throw new Error('The Extension is Unknown/Unsupported type!');
       }
-
-      const type = await Fragment.extValidType(ext); // html -> text/html
-
-      if (!fragment.formats.includes(type)) {
-        return res.status(415).json(createErrorResponse(415, 'Conversion is not allowed.'));
-      }
-
-      const newFragmentData = await fragment.convertData(fragmentData, type);
-      logger.debug(
-        { newFragmentData: newFragmentData, contentType: type },
-        'New fragment data and content type'
-      );
-      res.setHeader('Content-type', type);
-      res.status(200).send(newFragmentData);
     }
-  } catch (error) {
-    res.status(404).json(createErrorResponse(404, error.message));
+  } catch (Error) {
+    if (Error.message) {
+      res.status(415).send(createErrorResponse(415, Error.message));
+    } else {
+      res.status(404).send(createErrorResponse(404, 'Unknown Fragment'));
+    }
   }
 };

@@ -20,7 +20,6 @@ const rawBody = () =>
       // a Buffer (e.g., `Buffer.isBuffer(req.body) === true`). If not, `req.body`
       // will be equal to an empty Object `{}` and `Buffer.isBuffer(req.body) === false`
       const { type } = contentType.parse(req);
-      console.log('rawbody durl')
       return Fragment.isSupportedType(type);
     },
   });
@@ -30,6 +29,9 @@ router.get('/fragments', require('./get'));
 
 // GET /v1/fragments/:id
 router.get('/fragments/:id', require('./get-by-id'));
+
+// GET /v1/fragments/:id/info
+router.get('/fragments/:id/info', require('./get-info'));
 
 // Use a raw body parser for POST, which will give a `Buffer` Object or `{}` at `req.body`
 // You can use Buffer.isBuffer(req.body) to test if it was parsed by the raw body parser.
