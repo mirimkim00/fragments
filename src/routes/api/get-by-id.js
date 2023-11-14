@@ -38,10 +38,6 @@ module.exports = async (req, res) => {
       }
     }
   } catch (Error) {
-    if (Error.message) {
-      res.status(415).send(createErrorResponse(415, Error.message));
-    } else {
-      res.status(404).send(createErrorResponse(404, 'Unknown Fragment'));
-    }
+    res.status(404).send(createErrorResponse(404, 'Unknown Fragment'));
   }
 };
