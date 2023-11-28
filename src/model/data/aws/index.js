@@ -2,11 +2,11 @@
 const MemoryDB = require('../memory/memory-db');
 
 // Create two in-memory databases: one for fragment metadata and the other for raw data
-const data = new MemoryDB();
 const metadata = new MemoryDB();
 
 const s3Client = require('./s3Client');
 const { PutObjectCommand, GetObjectCommand, DeleteObjectCommand } = require('@aws-sdk/client-s3');
+const logger = require('../../../logger');
 
 // Write a fragment's metadata to memory db. Returns a Promise
 function writeFragment(fragment) {
@@ -111,21 +111,12 @@ async function deleteFragment(ownerId, id) {
     Key: `${ownerId}/${id}`,
   };
 
-  // Configure our DELETE params, with the name of the table and key (partition key + sort key)
-  const params2 = {
-    TableName: process.env.AWS_DYNAMODB_TABLE_NAME,
-    Key: { ownerId, id },
-  };
-
   // A client sends the command to AWS
   const command = new DeleteObjectCommand(params);
-  // Create a DELETE command to send to DynamoDB
-  const command2 = new DeleteCommand(params2);
 
   try {
     // Use our client to send the command
     await s3Client.send(command);
-    await ddbDocClient.send(command2);
   } catch (err) {
     const { Bucket, Key } = params;
     logger.error({ err, Bucket, Key }, 'Error deleting fragment data from S3');
