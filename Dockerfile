@@ -66,6 +66,6 @@ CMD ["npm", "start"]
 EXPOSE 8080
 
 # exit 0 or 1(fail)
-HEALTHCHECK --interval=15s --timeout=30s --start-period=5s --retries=3 \
-  CMD curl --fail localhost:8080 || exit 1
+# HEALTHCHECK --interval=15s --timeout=30s --start-period=5s --retries=3 \
+#   CMD curl --fail localhost:8080 || exit 1
  

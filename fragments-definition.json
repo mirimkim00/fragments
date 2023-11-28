@@ -29,6 +29,14 @@
         {
           "name": "PORT",
           "value": "8080"
+        },
+        {
+          "name": "AWS_S3_BUCKET_NAME",
+          "value": "mirim.kim-fragments"
+        },
+        {
+          "name": "HTPASSWD_FILE",
+          "value": "tests/.htpasswd"
         }
       ],
       "resourceRequirements": null,
