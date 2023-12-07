@@ -88,20 +88,7 @@ describe('GET /v1/fragments', () => {
     expect(res.statusCode).toBe(200);
     expect(res.text).toEqual('# This is a markdown type fragment');
   });
-
-  // test('unsuccessful conversion of text/plain extension to the unsupported extension', async () => {
-  //   const req = await request(app)
-  //     .post('/v1/fragments/')
-  //     .auth('user1@email.com', 'password1')
-  //     .send('This is a text type fragment')
-  //     .set('Content-type', 'text/plain');
-
-  //   const res = await request(app)
-  //     .get(`/v1/fragments/${req.body.fragment.id}.html`)
-  //     .auth('user1@email.com', 'password1');
-  //   expect(res.statusCode).toBe(415);
-  // });
-
+  
   test('authenticated user successfully gets array/list of fragments GET /fragments/?expand=1', async () => {
     await request(app)
       .post('/v1/fragments')
