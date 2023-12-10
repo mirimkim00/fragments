@@ -32,6 +32,10 @@ const supportedTypes = [
 
 class Fragment {
   constructor({ id, ownerId, created, updated, type, size = 0 }) {
+    if (!ownerId || !type || !Fragment.isSupportedType(type)) {
+      throw new Error('Invalid ownerId or type');
+    }
+    
     if (id) {
       this.id = id;
     } else {

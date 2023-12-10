@@ -4,10 +4,9 @@ const app = require('../../src/app');
 const { readFragmentData } = require('../../src/model/data');
 
 describe('PUT /v1/fragments/:id', () => {
-  // If the request is missing the Authorization header, it should be forbidden
-  test('unauthenticated requests are denied', () => request(app).put('/v1/fragments').expect(401));
+  test('Deny the unauthenticated requests', () => request(app).put('/v1/fragments').expect(401));
 
-  test('authenticated user updates the fragment data successfully', async () => {
+  test('Authenticated user updates the fragment data successfully', async () => {
     const post = await request(app)
       .post('/v1/fragments')
       .send('test fragment')
@@ -16,7 +15,7 @@ describe('PUT /v1/fragments/:id', () => {
 
     const update = await request(app)
       .put(`/v1/fragments/${post.body.fragment.id}`)
-      .send('this is an updated test fragment')
+      .send('updated test fragment')
       .set('Content-type', 'text/plain')
       .auth('user1@email.com', 'password1');
 
@@ -31,16 +30,16 @@ describe('PUT /v1/fragments/:id', () => {
     expect(req.body.toString()).toBe(fragment.toString());
   });
 
-  test('authenticated user fails to update fragment data because of different fragment types', async () => {
+  test('Failed to update fragment data because the type does not match', async () => {
     const post = await request(app)
       .post('/v1/fragments')
-      .send('this is a test fragment')
+      .send('test fragment')
       .set('Content-type', 'text/plain')
       .auth('user1@email.com', 'password1');
 
     const update = await request(app)
       .put(`/v1/fragments/${post.body.fragment.id}`)
-      .send('this is a failed updated test fragment')
+      .send('failed updated test fragment')
       .set('Content-type', 'text/markdown')
       .auth('user1@email.com', 'password1');
 
@@ -51,14 +50,14 @@ describe('PUT /v1/fragments/:id', () => {
       .auth('user1@email.com', 'password1')
       .responseType('blob');
 
-    expect(req.body.toString()).toBe('this is a test fragment');
+    expect(req.body.toString()).toBe('test fragment');
   });
 
-  test('authenticated user fails to update a fragment data with invalid ID', async () => {
+  test('Failed to update a fragment data with invalid ID', async () => {
     const res = await request(app)
       .put('/v1/fragments/invalidID')
       .auth('user1@email.com', 'password1')
-      .send('this is fragment 1 update')
+      .send('failed updated test fragment')
       .set('Content-type', 'text/markdown');
 
     expect(res.status).toBe(404);

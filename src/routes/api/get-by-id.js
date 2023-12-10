@@ -4,8 +4,8 @@ const path = require('path');
 const logger = require('../../logger');
 
 module.exports = async (req, res) => {
-  let extension = query.ext.split('.').pop();
   const query = path.parse(req.params.id);
+  let extension = query.ext.split('.').pop();
   try {
     let fragmentMetadata = await Fragment.byId(req.user, query.name);
     let fragment = await fragmentMetadata.getData();

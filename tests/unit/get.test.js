@@ -2,6 +2,7 @@ const request = require('supertest');
 const hash = require('../../src/hash');
 const app = require('../../src/app');
 const { readFragmentData, listFragments } = require('../../src/model/data');
+const fs = require('fs');
 
 describe('GET /v1/fragments', () => {
   // If the request is missing the Authorization header, it should be forbidden
@@ -39,7 +40,7 @@ describe('GET /v1/fragments', () => {
     expect(res.text).toBe(fragment.toString());
   });
 
-  test('invalid fragment ID for the GET request should give an appropriate error', async () => {
+  test('Return an appropriate error if invalid fragment ID used for the GET request', async () => {
     const res = await request(app)
       .get('/v1/fragments/invalidID')
       .auth('user1@email.com', 'password1');
@@ -47,7 +48,7 @@ describe('GET /v1/fragments', () => {
     expect(res.body.error.message).toBe('Unknown Fragment');
   });
 
-  test('successful conversion of html extension to text(.txt)', async () => {
+  test('successful conversion of html extension to text', async () => {
     const req = await request(app)
       .post('/v1/fragments/')
       .auth('user1@email.com', 'password1')
@@ -61,7 +62,7 @@ describe('GET /v1/fragments', () => {
     expect(res.text).toBe('<h2> Html </h2>');
   });
 
-  test('successful conversion of markdown(.md) extension to html', async () => {
+  test('successful conversion of markdown extension to html', async () => {
     const req = await request(app)
       .post('/v1/fragments/')
       .auth('user1@email.com', 'password1')
@@ -72,7 +73,7 @@ describe('GET /v1/fragments', () => {
       .get(`/v1/fragments/${req.body.fragment.id}.html`)
       .auth('user1@email.com', 'password1');
     expect(res.statusCode).toBe(200);
-    expect(res.text).toEqual('<h1># This is a markdown type fragment</h1>\n');
+    expect(res.text).toEqual('<h1>This is a markdown type fragment</h1>\n');
   });
 
   test('successful conversion of text/markdown(.md) extension to .md', async () => {
@@ -89,7 +90,7 @@ describe('GET /v1/fragments', () => {
     expect(res.text).toEqual('# This is a markdown type fragment');
   });
   
-  test('authenticated user successfully gets array/list of fragments GET /fragments/?expand=1', async () => {
+  test('Get array/list of fragments GET /fragments/?expand=1', async () => {
     await request(app)
       .post('/v1/fragments')
       .send('this is a testing fragment 1')
@@ -110,7 +111,7 @@ describe('GET /v1/fragments', () => {
     expect(res.body.fragments).toEqual(result);
   });
 
-  test('Get all fragments list of unauthenticated user (get?expand=1)', async () => {
+  test('unauthenticated user failed to get all fragments list', async () => {
     const res = await request(app)
       .get('/v1/fragments?expand=1')
       .auth('unauthenticated@email.com', 'password1');
@@ -120,7 +121,7 @@ describe('GET /v1/fragments', () => {
   test('Get fragments metadata by valid user ID', async () => {
     const req = await request(app)
       .post('/v1/fragments')
-      .send('This is a testing fragment')
+      .send('test fragment')
       .set('Content-Type', 'text/plain')
       .auth('user1@email.com', 'password1');
 
@@ -135,14 +136,88 @@ describe('GET /v1/fragments', () => {
   test('Get fragments metadata by invalid user ID', async () => {
     const req = await request(app)
       .post('/v1/fragments')
-      .send('This is a fragment')
+      .send('test fragment')
       .set('Content-Type', 'text/plain')
       .auth('user1@email.com', 'password1');
 
     const res = await request(app)
-      .get(`/v1/fragments/${req.body.fragment.id}abc/info`)
+      .get(`/v1/fragments/${req.body.fragment.id}invalid/info`)
       .auth('user1@email.com', 'password1');
 
     expect(res.statusCode).toBe(404);
+  });
+
+  test('Get existing image file by fragment ID', async () => {
+    const req = await request(app)
+      .post('/v1/fragments/')
+      .auth('user1@email.com', 'password1')
+      .set('Content-type', 'image/jpeg')
+      .send(fs.readFileSync(`${__dirname}/images/cat1.jpeg`));
+    expect(req.status).toBe(201);
+
+    const res = await request(app)
+      .get(`/v1/fragments/${req.body.fragment.id}`)
+      .auth('user1@email.com', 'password1');
+    expect(res.type).toBe('image/jpeg');
+    expect(res.statusCode).toBe(200);
+    expect(res.body).toEqual(Buffer.from(fs.readFileSync(`${__dirname}/images/cat1.jpeg`)));
+  });
+
+  test('successful conversion of the existing jpg to gif', async () => {
+    const req = await request(app)
+      .post('/v1/fragments/')
+      .auth('user1@email.com', 'password1')
+      .set('Content-type', 'image/jpeg')
+      .send(fs.readFileSync(`${__dirname}/images/cat1.jpeg`));
+    expect(req.status).toBe(201);
+
+    const res = await request(app)
+      .get(`/v1/fragments/${req.body.fragment.id}.gif`)
+      .auth('user1@email.com', 'password1');
+    expect(res.statusCode).toBe(200);
+    expect(res.type).toBe('image/gif');
+  });
+
+  test('successful conversion of the existing jpg to webp', async () => {
+    const req = await request(app)
+      .post('/v1/fragments/')
+      .auth('user1@email.com', 'password1')
+      .set('Content-type', 'image/jpeg')
+      .send(fs.readFileSync(`${__dirname}/images/cat1.jpeg`));
+    expect(req.status).toBe(201);
+
+    const res = await request(app)
+      .get(`/v1/fragments/${req.body.fragment.id}.webp`)
+      .auth('user1@email.com', 'password1');
+    expect(res.statusCode).toBe(200);
+    expect(res.type).toBe('image/webp');
+  });
+
+  test('successful conversion of the existing jpg to webp', async () => {
+    const req = await request(app)
+      .post('/v1/fragments/')
+      .auth('user1@email.com', 'password1')
+      .set('Content-type', 'image/jpeg')
+      .send(fs.readFileSync(`${__dirname}/images/cat1.jpeg`));
+    expect(req.status).toBe(201);
+
+    const res = await request(app)
+      .get(`/v1/fragments/${req.body.fragment.id}.png`)
+      .auth('user1@email.com', 'password1');
+    expect(res.statusCode).toBe(200);
+    expect(res.type).toBe('image/png');
+  });
+
+  test('unsuccessful conversion of text/plain extension to the unsupported extension', async () => {
+    const req = await request(app)
+      .post('/v1/fragments/')
+      .auth('user1@email.com', 'password1')
+      .send('This is a text type fragment')
+      .set('Content-type', 'text/plain');
+
+    const res = await request(app)
+      .get(`/v1/fragments/${req.body.fragment.id}.html`)
+      .auth('user1@email.com', 'password1');
+    expect(res.statusCode).toBe(415);
   });
 });
