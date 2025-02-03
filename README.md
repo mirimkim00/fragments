@@ -36,4 +36,4 @@ To see the logs of the container: `docker logs -f [CONTAINER ID]`
 
 -----
 ### Walkthrough Video
-https://www.youtube.com/watch?v=9nXUk2l-BbU
+https://drive.google.com/file/d/1mzIIXDRUEAS9ASzoGLu79ekzS3l3JMIF/view?usp=sharing
